@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - ares-network
+
+  api-gateway:
+    build: ./requestshield/server
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    networks:
+      - ares-network
+    env_file:
+    - ./requestshield/server/.env
+
+  # Handles Code Submissions
+  submission-service:
+    build: ./submission-service
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    networks:
+      - ares-network
+
+  executor-service:
+    build: ./executor-service
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    networks:
+      - ares-network
+      
+  socket-service:
+    build: ./socket-service
+    ports:
+      - "4000:4000"
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    networks:
+      - ares-network    
+
+networks:
+  ares-network:
+    driver: bridge
