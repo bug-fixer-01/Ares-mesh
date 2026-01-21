@@ -9,7 +9,7 @@ services:
       - ares-network
 
   api-gateway:
-    build: ./requestshield/server
+    build: ./requestshield
     ports:
       - "8000:8000"
     depends_on:
@@ -17,7 +17,7 @@ services:
     networks:
       - ares-network
     env_file:
-    - ./requestshield/server/.env
+    - ./requestshield/.env
 
   # Handles Code Submissions
   submission-service:

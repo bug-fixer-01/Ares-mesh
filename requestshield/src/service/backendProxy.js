@@ -5,7 +5,7 @@ const backendClient = axios.create({
 });
 
 export const forwardRequest = async (req,res) => {
-  const response = await backendClient.get(
+  const response = await backendClient.post(
     'http://submission-service:3001/submit',req.body
   );
   return response.data;

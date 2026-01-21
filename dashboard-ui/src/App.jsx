@@ -46,7 +46,7 @@ export default function App() {
     try {
       const res = await fetch('http://localhost:8000/gateway/data', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json'  , 'x-api-key': 'sk_ed39f9a5a97ab0713c00128204094ced'},
+        headers: { 'Content-Type': 'application/json'  , 'x-api-key': 'sk_17c69058d12125682aee869b7ed3b692'},
         body: JSON.stringify({ language: 'javascript', code })
       });
       const {data:{jobId}} = await res.json();

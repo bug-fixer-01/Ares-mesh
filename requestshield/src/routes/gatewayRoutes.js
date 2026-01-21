@@ -10,7 +10,7 @@ import {
 
 const router = express.Router();
 
-router.get(
+router.post(
   '/gateway/data',
   apiKeyAuth,
   rateLimiter,
