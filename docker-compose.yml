@@ -52,6 +52,15 @@ services:
     networks:
       - ares-network    
 
+  user-service:
+    build: ./user-service
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    networks:
+      - ares-network
+      
 networks:
   ares-network:
     driver: bridge
