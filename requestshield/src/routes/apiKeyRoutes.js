@@ -1,6 +1,5 @@
 import express from 'express';
 import { authenticate } from '../middlewares/authMiddleware.js';
-import { authorize } from '../middlewares/authorize.js';
 import {
   createApiKey,
   revokeApiKey
@@ -8,7 +7,7 @@ import {
 
 const router = express.Router();
 
-router.post('/keys', authenticate, authorize('admin'), createApiKey);
-router.delete('/keys/:key', authenticate, authorize('admin'), revokeApiKey);
+router.post('/keys', authenticate, createApiKey);
+router.delete('/keys/:key', authenticate, revokeApiKey);
 
 export default router;
