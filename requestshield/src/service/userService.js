@@ -5,12 +5,12 @@ const userAuthJwt = axios.create({
   timeout: 2000 // 2 seconds
 });
 
-export const authenticateUser = async (req, res) => {
+export const authenticateUser = (endpoint) => async (req, res) => {
   try {
     const { username, password } = req.body;
 
     const response = await userAuthJwt.post(
-      'http://localhost:5000/auth/login',
+      `http://localhost:5000/auth/${endpoint}`,
       { username, password }
     );
 
