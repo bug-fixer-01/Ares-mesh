@@ -10,7 +10,7 @@ export const authenticateUser = (endpoint) => async (req, res) => {
     const { username, password } = req.body;
 
     const response = await userAuthJwt.post(
-      `http://localhost:5000/auth/${endpoint}`,
+      `http://user-service:5000/auth/${endpoint}`,
       { username, password }
     );
 
