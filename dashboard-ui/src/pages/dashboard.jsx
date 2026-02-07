@@ -111,7 +111,7 @@ export default function dashboard() {
         {/* Editor Section */}
         <div className="col-span-7 border border-green-900 bg-black/50 overflow-hidden rounded-sm">
           <div className="bg-green-900/10 p-2 border-b border-green-900 flex justify-between items-center">
-            <span className="text-xs uppercase px-2">Source_Code.{selected === "javascript" ? "js" : selected === "Python" ? "py" : "txt"}</span>
+            <span className="text-xs uppercase px-2">Source_Code.{selected === "javascript" ? "js" : selected === "python" ? "py" : "txt"}</span>
 
             <select value={selected} onChange={(e) => setSelected(e.target.value)} className='flex items-center gap-2 outline-none bg-transparent border-2 border-green-900 text-green-500 px-4 py-1 text-xs font-bold '>
               
