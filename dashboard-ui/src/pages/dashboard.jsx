@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
@@ -6,15 +6,22 @@ import 'xterm/css/xterm.css';
 import Editor from "@monaco-editor/react";
 import { Terminal as TerminalIcon, Play, ShieldAlert, Activity } from 'lucide-react';
 import axiosInstance from '../utils/axiosInstance';
+import { DiJavascript1 } from "react-icons/di";
 
 const socket = io('http://localhost:4000');
 
 export default function dashboard() {
   const terminalRef = useRef(null);
   const xterm = useRef(null);
-  const [code, setCode] = useState('console.log("Result is: " + (5 * 20));\n\n// Try an infinite loop to test resource limits:\n// while(true) { console.log("Hacking...") }');
   const [status, setStatus] = useState('READY');
   const [apiKey, setApiKey] = useState('');
+  const options = ["python", "javascript"];
+  const [selected, setSelected] = useState("python");
+  const [code, setCode] = useState('console.log("Result is: " + (5 * 20));\n\n// Try an infinite loop to test resource limits:\n// while(true) { console.log("Hacking...") }');
+
+  useEffect(() => {
+    setCode(selected === "javascript" ? 'console.log("Result is: " + (5 * 20));\n\n// Try an infinite loop to test resource limits:\n// while(true) { console.log("Hacking...") }' : 'print(f"Result is: {5 * 20}")\n\n# Try an infinite loop to test resource limits:\n# while True: print("Hacking...")');
+  }, [selected]);
 
   useEffect(() => {
     // Initialize XTerm.js
@@ -49,8 +56,6 @@ export default function dashboard() {
           tier: "free"
         })
         const { apiKey } = res.data;
-        console.log(res.data)
-        console.log(apiKey)
         if (apiKey) {
           setApiKey(apiKey);
         }
@@ -72,7 +77,7 @@ export default function dashboard() {
       const res = await fetch('http://localhost:8000/gateway/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': `${apiKey}` },
-        body: JSON.stringify({ language: 'javascript', code })
+        body: JSON.stringify({ language: selected, code })
       });
       const { data: { jobId } } = await res.json();
       xterm.current.writeln(`\x1b[36m[QUEUE] Job ID: ${jobId} allocated.\x1b[0m`);
@@ -106,7 +111,17 @@ export default function dashboard() {
         {/* Editor Section */}
         <div className="col-span-7 border border-green-900 bg-black/50 overflow-hidden rounded-sm">
           <div className="bg-green-900/10 p-2 border-b border-green-900 flex justify-between items-center">
-            <span className="text-xs uppercase px-2">Source_Code.js</span>
+            <span className="text-xs uppercase px-2">Source_Code.{selected === "javascript" ? "js" : selected === "Python" ? "py" : "txt"}</span>
+
+            <select value={selected} onChange={(e) => setSelected(e.target.value)} className='flex items-center gap-2 outline-none bg-transparent border-2 border-green-900 text-green-500 px-4 py-1 text-xs font-bold '>
+              
+              {options.map((color, index) => (
+                <option key={index} value={color}>
+                  {color}
+                </option>
+              ))}
+            </select>
+
             <button
               onClick={runCode}
               disabled={status === 'EXECUTING'}
@@ -117,7 +132,7 @@ export default function dashboard() {
           </div>
           <Editor
             height="500px"
-            defaultLanguage="javascript"
+            language= {selected}
             theme="vs-dark"
             value={code}
             onChange={setCode}
