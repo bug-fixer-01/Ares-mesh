@@ -47,26 +47,6 @@ export default function dashboard() {
     return () => socket.disconnect();
   }, []);
 
-  // Fetch API key on component mount
-  useEffect(() => {
-    async function fetchApiKey() {
-      try {
-        const res = await axiosInstance.post("/admin/keys", {
-          owner: "company-x",
-          tier: "free"
-        })
-        const { apiKey } = res.data;
-        if (apiKey) {
-          setApiKey(apiKey);
-        }
-      }
-      catch (err) {
-        console.error("Failed to fetch API key:", err);
-        throw new Error("API key retrieval failed");
-      }
-    }
-    fetchApiKey();
-  }, []);
 
   const runCode = async () => {
     setStatus('EXECUTING');
@@ -74,12 +54,12 @@ export default function dashboard() {
     xterm.current.writeln('\x1b[33m[PROCESS] Sending job to submission-service...\x1b[0m');
 
     try {
-      const res = await fetch('http://localhost:8000/gateway/data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': `${apiKey}` },
-        body: JSON.stringify({ language: selected, code })
+      const res = await axiosInstance.post('/gateway/data', {
+        language: selected,
+        code
       });
-      const { data: { jobId } } = await res.json();
+      console.log("hello")
+      const { jobId } = res.data.data;
       xterm.current.writeln(`\x1b[36m[QUEUE] Job ID: ${jobId} allocated.\x1b[0m`);
 
       // Listen for real-time logs for this specific job

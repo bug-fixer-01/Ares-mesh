@@ -1,5 +1,4 @@
 import express from 'express';
-import { apiKeyAuth } from '../middlewares/apiKeyAuth.js';
 import { rateLimiter } from '../middlewares/rateLimiter.js';
 import { forwardRequest } from '../service/backendProxy.js';
 import {
@@ -7,12 +6,13 @@ import {
   recordFailure,
   recordSuccess
 } from '../utils/circuitBreaker.js';
+import { authenticate } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
 router.post(
   '/gateway/data',
-  apiKeyAuth,
+  authenticate,
   rateLimiter,
   async (req, res) => {
       if (!canProceed()) {
