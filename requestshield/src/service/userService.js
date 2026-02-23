@@ -2,7 +2,7 @@ import axios from 'axios';
 import { generateToken } from '../utils/jwt.js';
 
 const userAuthJwt = axios.create({
-  timeout: 2000 // 2 seconds
+  timeout: 5000 // 2 seconds
 });
 
 export const authenticateUser = (endpoint) => async (req, res) => {

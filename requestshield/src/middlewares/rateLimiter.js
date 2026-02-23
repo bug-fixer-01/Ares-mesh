@@ -2,13 +2,16 @@ import redisClient from '../config/redis.js';
 
 export const rateLimiter = async (req, res, next) => {
   try {
-    const { _id , role} = req.user;
+    const { _id , role , username} = req.user;
     const limit = role === 'admin' ? 15 : 10; // higher limit for admins
 
     const redisKey = `rate:${_id}`;
-    const usageKey = `usage:${_id}`;
+    const usageKey = `usage:${_id}-${username}`;
     const current = await redisClient.get(redisKey);
-
+    console.log("this" + current)
+   
+    console.log(usageKey);
+     
     await redisClient.incr(usageKey);
     
     if (current && Number(current) >= limit) {

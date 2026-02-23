@@ -13,12 +13,9 @@ const seedAdmin = async () => {
     return;
   }
 
-  // Hash the password (CRITICAL)
-  const hashedPassword = await bcrypt.hash('SuperSecretPassword123!', 10);
-
   const adminUser = new User({
     username: 'Prayash',
-    password: hashedPassword,
+    password: '123123',
     role: 'admin' // <--- This allows them to pass your middleware
   });
 

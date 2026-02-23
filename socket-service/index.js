@@ -6,7 +6,7 @@ import IORedis from 'ioredis';
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: { origin: "*" } // In production, restrict this!
+  cors: { origin: "*" } // Allow all origins for simplicity; adjust in production!
 });
 
 const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
@@ -22,12 +22,16 @@ redisSub.on('message', (channel, message) => {
   if (channel === 'job-logs') {
     const data = JSON.parse(message);
     // Send specifically to the user interested in this jobId
-    io.emit(`job-${data.jobId}`, data.log);
+    io.to(`job-${data.jobId}`).emit(`job-${data.jobId}`, data.log);
   }
 });
 
 io.on('connection', (socket) => {
-  console.log('🔌 Client connected:', socket.id);
+  // Allow the frontend to join a specific job room
+  socket.on('join-job', (jobId) => {
+    socket.join(`job-${jobId}`);
+    console.log(`👤 Client ${socket.id} joined room: job-${jobId}`);
+  });
 });
 
 httpServer.listen(4000, () => {

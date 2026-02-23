@@ -1,4 +1,4 @@
-import { use, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
@@ -6,7 +6,10 @@ import 'xterm/css/xterm.css';
 import Editor from "@monaco-editor/react";
 import { Terminal as TerminalIcon, Play, ShieldAlert, Activity } from 'lucide-react';
 import axiosInstance from '../utils/axiosInstance';
-import { DiJavascript1 } from "react-icons/di";
+import { Link } from 'react-router-dom';
+import { useContext } from 'react';
+import { UserContext } from '../context/AuthContext';
+
 
 const socket = io('http://localhost:4000');
 
@@ -14,11 +17,12 @@ export default function dashboard() {
   const terminalRef = useRef(null);
   const xterm = useRef(null);
   const [status, setStatus] = useState('READY');
-  const [apiKey, setApiKey] = useState('');
   const options = ["python", "javascript"];
   const [selected, setSelected] = useState("python");
+  const [myJobs, setMyJobs] = useState([]);
   const [code, setCode] = useState('console.log("Result is: " + (5 * 20));\n\n// Try an infinite loop to test resource limits:\n// while(true) { console.log("Hacking...") }');
-
+  const {user} = useContext(UserContext)
+  console.log(user.user.role)
   useEffect(() => {
     setCode(selected === "javascript" ? 'console.log("Result is: " + (5 * 20));\n\n// Try an infinite loop to test resource limits:\n// while(true) { console.log("Hacking...") }' : 'print(f"Result is: {5 * 20}")\n\n# Try an infinite loop to test resource limits:\n# while True: print("Hacking...")');
   }, [selected]);
@@ -58,11 +62,14 @@ export default function dashboard() {
         language: selected,
         code
       });
-      console.log("hello")
       const { jobId } = res.data.data;
-      xterm.current.writeln(`\x1b[36m[QUEUE] Job ID: ${jobId} allocated.\x1b[0m`);
+      setMyJobs(prev => [...prev, { id: jobId, timestamp: new Date() }]);
+      xterm.current.writeln(`\x1b[36m[QUEUE] Job ID: ${myJobs.length} allocated.\x1b[0m`);
+      
 
       // Listen for real-time logs for this specific job
+      socket.emit('join-job', jobId);
+
       socket.on(`job-${jobId}`, (log) => {
         xterm.current.write(log);
       });
@@ -81,6 +88,7 @@ export default function dashboard() {
           <ShieldAlert className="text-red-600 animate-pulse" />
           <h1 className="text-2xl font-bold tracking-tighter">ARES-MESH // CORE_NODE_01</h1>
         </div>
+          {user.user.role === 'admin' && (<Link to="/Admin" className='bg-green-600 rounded-sm text-black p-2 hover:bg-green-400 '>Admin page</Link>)} 
         <div className="flex gap-8 text-xs">
           <div className="flex items-center gap-2"><Activity size={14} /> CPU: 0.18%</div>
           <div className="text-green-800">Uptime: 14:22:01</div>
@@ -94,7 +102,7 @@ export default function dashboard() {
             <span className="text-xs uppercase px-2">Source_Code.{selected === "javascript" ? "js" : selected === "python" ? "py" : "txt"}</span>
 
             <select value={selected} onChange={(e) => setSelected(e.target.value)} className='flex items-center gap-2 outline-none bg-transparent border-2 border-green-900 text-green-500 px-4 py-1 text-xs font-bold '>
-              
+
               {options.map((color, index) => (
                 <option key={index} value={color}>
                   {color}
@@ -112,7 +120,7 @@ export default function dashboard() {
           </div>
           <Editor
             height="500px"
-            language= {selected}
+            language={selected}
             theme="vs-dark"
             value={code}
             onChange={setCode}
