@@ -55,7 +55,7 @@ export default function dashboard() {
 
 const runCode = async () => {
   setStatus('EXECUTING');
-  xterm.current?.clear();
+  xterm.current?.reset();
   xterm.current?.writeln('\x1b[33m[PROCESS] Sending job...\x1b[0m');
 
   try {
