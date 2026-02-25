@@ -18,14 +18,15 @@ export default function dashboard() {
   const xterm = useRef(null);
   const [status, setStatus] = useState('READY');
   const options = ["python", "javascript"];
-  const [selected, setSelected] = useState("python");
-  const [myJobs, setMyJobs] = useState([]);
+  const [selected, setSelected] = useState("javascript");
+  const [myJobs, setMyJobs] = useState(null);
   const [code, setCode] = useState('console.log("Result is: " + (5 * 20));\n\n// Try an infinite loop to test resource limits:\n// while(true) { console.log("Hacking...") }');
-  const {user} = useContext(UserContext)
-  console.log(user.user.role)
+  const { user } = useContext(UserContext)
+
   useEffect(() => {
     setCode(selected === "javascript" ? 'console.log("Result is: " + (5 * 20));\n\n// Try an infinite loop to test resource limits:\n// while(true) { console.log("Hacking...") }' : 'print(f"Result is: {5 * 20}")\n\n# Try an infinite loop to test resource limits:\n# while True: print("Hacking...")');
   }, [selected]);
+
 
   useEffect(() => {
     // Initialize XTerm.js
@@ -52,33 +53,47 @@ export default function dashboard() {
   }, []);
 
 
-  const runCode = async () => {
-    setStatus('EXECUTING');
-    xterm.current.clear();
-    xterm.current.writeln('\x1b[33m[PROCESS] Sending job to submission-service...\x1b[0m');
+const runCode = async () => {
+  setStatus('EXECUTING');
+  xterm.current?.clear();
+  xterm.current?.writeln('\x1b[33m[PROCESS] Sending job...\x1b[0m');
 
-    try {
-      const res = await axiosInstance.post('/gateway/data', {
-        language: selected,
-        code
-      });
-      const { jobId } = res.data.data;
-      setMyJobs(prev => [...prev, { id: jobId, timestamp: new Date() }]);
-      xterm.current.writeln(`\x1b[36m[QUEUE] Job ID: ${myJobs.length} allocated.\x1b[0m`);
-      
+  try {
+    const res = await axiosInstance.post('/gateway/data', {
+      language: selected,
+      code
+    });
 
-      // Listen for real-time logs for this specific job
-      socket.emit('join-job', jobId);
+    const { jobId } = res.data.data;
 
-      socket.on(`job-${jobId}`, (log) => {
-        xterm.current.write(log);
-      });
-    } catch (err) {
-      xterm.current.writeln('\x1b[31m[ERROR] Failed to reach submission-service\x1b[0m');
-    } finally {
-      setStatus('READY');
-    }
+    setMyJobs(jobId);
+
+    xterm.current?.writeln(
+      `\x1b[36m[QUEUE] Job ID: ${jobId} allocated.\x1b[0m`
+    );
+
+    socket.emit('join-job', jobId);
+
+  } catch (err) {
+    xterm.current?.writeln(
+      '\x1b[31m[ERROR] Failed to reach submission-service\x1b[0m'
+    );
+  } finally {
+    setStatus('READY');
+  }
+};
+
+useEffect(() => {
+  const handler = (log) => {
+    xterm.current?.write(log);
   };
+
+  socket.on(`job-${myJobs}`, handler);
+
+  return () => {
+    socket.off(`job-${myJobs}`, handler);
+  };
+}, [myJobs]);
 
   return (
     <div className="min-h-screen bg-black text-green-500 font-mono p-8 selection:bg-green-900">
@@ -88,7 +103,7 @@ export default function dashboard() {
           <ShieldAlert className="text-red-600 animate-pulse" />
           <h1 className="text-2xl font-bold tracking-tighter">ARES-MESH // CORE_NODE_01</h1>
         </div>
-          {user.user.role === 'admin' && (<Link to="/Admin" className='bg-green-600 rounded-sm text-black p-2 hover:bg-green-400 '>Admin page</Link>)} 
+        {user.user.role === 'admin' && (<Link to="/Admin" className='bg-green-600 rounded-sm text-black p-2 hover:bg-green-400 '>Admin page</Link>)}
         <div className="flex gap-8 text-xs">
           <div className="flex items-center gap-2"><Activity size={14} /> CPU: 0.18%</div>
           <div className="text-green-800">Uptime: 14:22:01</div>
@@ -125,6 +140,9 @@ export default function dashboard() {
             value={code}
             onChange={setCode}
             options={{ minimap: { enabled: false }, fontSize: 16 }}
+            onKeyDown={(e) => {
+              console.log("Key:", e.key);
+            }}
           />
         </div>
 
