@@ -17,6 +17,7 @@ export default function dashboard() {
   const terminalRef = useRef(null);
   const xterm = useRef(null);
   const [status, setStatus] = useState('READY');
+  const isRunning = useRef(false)
   const options = ["python", "javascript"];
   const [selected, setSelected] = useState("javascript");
   const [myJobs, setMyJobs] = useState(null);
@@ -55,6 +56,7 @@ export default function dashboard() {
 
 const runCode = async () => {
   setStatus('EXECUTING');
+  isRunning.current = true;
   xterm.current?.reset();
   xterm.current?.writeln('\x1b[33m[PROCESS] Sending job...\x1b[0m');
 
@@ -73,14 +75,16 @@ const runCode = async () => {
     );
 
     socket.emit('join-job', jobId);
-
+    
   } catch (err) {
     xterm.current?.writeln(
       '\x1b[31m[ERROR] Failed to reach submission-service\x1b[0m'
     );
-  } finally {
-    setStatus('READY');
-  }
+  } 
+  // finally {
+  //   setStatus('READY');
+  //   isRunning.current = false;
+  // }
 };
 
 useEffect(() => {
@@ -92,6 +96,8 @@ useEffect(() => {
 
   return () => {
     socket.off(`job-${myJobs}`, handler);
+    setStatus('READY');
+    isRunning.current = false;
   };
 }, [myJobs]);
 
@@ -127,7 +133,7 @@ useEffect(() => {
 
             <button
               onClick={runCode}
-              disabled={status === 'EXECUTING'}
+              disabled={status === 'EXECUTING' && isRunning.current}
               className="flex items-center gap-2 bg-green-600 text-black px-4 py-1 text-xs font-bold hover:bg-green-400 disabled:bg-gray-800 transition-colors"
             >
               <Play size={12} fill="black" /> {status === 'EXECUTING' ? 'RUNNING...' : 'EXECUTE'}

@@ -8,7 +8,6 @@ import Admin from './pages/Admin.jsx';
 
 const App = () => {
   const { user } = useContext(UserContext)
-  console.log(user)
   return (
      <main>
         <Router>
